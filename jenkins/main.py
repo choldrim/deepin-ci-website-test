@@ -12,8 +12,8 @@ SOURCE_BASE = "/data/deepin-website-services/website_source_code"
 SERVER_API_BASE = "http://10.0.1.62:8010/v1"
 
 
-def check_cl(r_id, clean=True):
-    source_dir = os.path.join(SOURCE_BASE, r_id)
+def check_cl(num, clean=True):
+    source_dir = os.path.join(SOURCE_BASE, num)
     exists = os.path.exists(source_dir)
     if exists and clean:
         #shutil.rmtree(source_dir)
@@ -22,8 +22,8 @@ def check_cl(r_id, clean=True):
     return exists
 
 
-def sync_source(r_id, j_src_dir):
-    source_dir = os.path.join(SOURCE_BASE, r_id)
+def sync_source(num, j_src_dir):
+    source_dir = os.path.join(SOURCE_BASE, num)
     if not os.path.exists(source_dir):
         os.makedirs(source_dir)
     #ret = shutil.copytree(j_src_dir, source_dir)
@@ -79,9 +79,9 @@ def get_valid_ip():
         quit(1)
 
 
-def create_container(r_id):
-    source_dir = os.path.join(SOURCE_BASE, r_id)
-    name = "deepin-website-cl-%s" % r_id
+def create_container(num):
+    source_dir = os.path.join(SOURCE_BASE, num)
+    name = "deepin-website-cl-%s" % num
     os.system("docker run --name %s --net=none -i -d -v %s:/usr/share/nginx/html nginx" % (name, source_dir))
 
     return name
@@ -94,14 +94,15 @@ def fix_ip(name, ip):
     return False
 
 
-def upload_result(r_id, ip):
-    print("all of the work is finished, upload review_id and ip to server")
-    print(r_id, ip)
+def upload_result(num, ip, domain):
+    #print("all of the work is finished, upload review_id and ip to server")
+    #print(num, ip, domain)
 
     url = "%s/hosts" % SERVER_API_BASE
     d = {
-        "rv_id": r_id,
-        "host": ip
+        "change_number": num,
+        "host": ip,
+        "domain": domain
         }
     rsp = requests.post(url, data=d)
     res = rsp.json().get("result")
@@ -114,13 +115,13 @@ def upload_result(r_id, ip):
         return False
 
 
-def destroy_container(r_id):
+def destroy_container(num):
     # rm the source code
-    s_dir = "%s/%s" %(SOURCE_BASE, r_id)
+    s_dir = "%s/%s" %(SOURCE_BASE, num)
     shutil.rmtree(s_dir)
 
     # rm container
-    name = "deepin-website-cl-%s" % r_id
+    name = "deepin-website-cl-%s" % num
     cmd = "docker stop %s && docker rm %s" %(name, name)
     ret = os.system(cmd)
     return ret
@@ -129,20 +130,22 @@ def destroy_container(r_id):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("change_num", help="change number")
+    parser.add_argument("change_number", help="change number")
+    parser.add_argument("domain", help="website domain name of the project")
     args = parser.parse_args()
-    r_id = args.change_num
+    num = args.change_number
+    domain = args.domain
 
     cr_event_type = os.getenv("GERRIT_EVENT_TYPE")
 
     if cr_event_type == "change-merged":
         # destroy the container
-        destroy_container(r_id)
+        destroy_container(num)
         pass
 
     elif cr_event_type == "patchset-created":
 
-        exists = check_cl(r_id)
+        exists = check_cl(num)
 
         jenkins_src_dir = os.getenv("WORKSPACE")
 
@@ -152,18 +155,18 @@ if __name__ == "__main__":
 
         jenkins_src_dir = os.path.join(jenkins_src_dir, "source")
 
-        sync_source(r_id, jenkins_src_dir)
+        sync_source(num, jenkins_src_dir)
 
         if exists:
-            print("cl (%s) exists, it won't deploy again, finish" % r_id)
+            print("cl (%s) exists, it won't deploy again, finish" % num)
         else:
             ip = get_valid_ip()
 
-            name = create_container(r_id)
+            name = create_container(num)
 
             fix_ip(name, ip)
 
-            upload_result(r_id, ip)
+            upload_result(num, ip, domain)
     else:
         print("E: gerrit event can't match any action")
         quit(1)

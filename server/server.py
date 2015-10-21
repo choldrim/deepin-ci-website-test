@@ -28,7 +28,8 @@ def get_host():
 
     ret_data = {"change_number":"", "host":""}
     ret_data["change_number"] = num
-    ret_data["host"] = data.get(num, "")
+    ret_data["host"] = data.get(num, {}).get("host", "")
+    ret_data["domain"] = data.get(num, {}).get("domain", "")
     return json.dumps(ret_data)
 
 
@@ -36,11 +37,12 @@ def get_host():
 def set_host():
     num = request.form.get("change_number")
     host = request.form.get("host")
+    domain = request.form.get("domain")
 
     ret_data = {"result":False}
 
-    if not num and not host:
-        ret_data["message"] = "params not correct"
+    if not num or not host or not domain:
+        ret_data["message"] = "params error"
         return json.dumps(ret_data)
 
     data = {}
@@ -49,7 +51,8 @@ def set_host():
         if len(_data.strip()):
             data = json.loads(_data)
 
-        data[num] = host
+    # handle data
+    data[num] = {"host": host, "domain": domain}
 
     with open("hosts.json", "w") as fp:
         json.dump(data, fp)

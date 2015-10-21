@@ -26,7 +26,14 @@ def get_host(num):
 
 def show_change_num_detail(num):
     detail = get_change_num_detail(num)
-    print(detail)
+    domain = detail.get("domain", "")
+    host = detail.get("host", "")
+    num = detail.get("change_number", "")
+    print("domain: %s" % domain)
+    print("host: %s" % domain)
+    print("change number: %s" % num)
+    return True
+
 
 def add_to_hosts(domain, host, num):
     uid = os.getuid()
@@ -114,48 +121,41 @@ def clear_all_hosts():
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--site", help="website domain, eg: www.deepin.com", default="www.deepin.com")
+    parser.add_argument("-d", "--domain", help="website domain, eg: www.deepin.com", default="www.deepin.com")
     parser.add_argument("-n", "--number", help="change number of the commit")
     parser.add_argument("-q", "--query", action="store_true", help="show detail of the given change number")
     parser.add_argument("-a", "--action", choices=["add", "del", "clear"],
             default="add", help="add/del/clear hosts item added by this tool")
     args = parser.parse_args()
 
-    site = args.site
+    domain = args.domain
     num = args.number
     action = args.action
     query = args.query
-
-    project = "sites/" + site
 
     if query:
         if not num:
             print("-n or --number options is required")
             quit(1)
-        #print("show detail of given num")
         show_change_num_detail(num)
 
     elif action == "add":
-        if not site:
-            print("--site options is required")
-            quit(1)
-
         if not num:
             print("--number options is required")
             quit(1)
 
         host = get_host(num)
         if host:
-            add_to_hosts(site, host, num)
+            add_to_hosts(domain, host, num)
         else:
             print("host not found in server")
 
     elif action == "del":
-        if not site:
-            print("--site options is required")
+        if not domain:
+            print("--domain options is required")
             quit(1)
 
-        del_from_hosts(site)
+        del_from_hosts(domain)
 
     elif action == "clear":
         clear_all_hosts()
