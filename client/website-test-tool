@@ -55,7 +55,7 @@ def filter_repeat_domain(content, domain):
     return "\n".join(filter_lines)
 
 
-def del_from_hosts(domain, rm=True):
+def del_from_hosts(domain):
     uid = os.getuid()
     if uid != 0:
         print("E: must be run as root!")
@@ -81,12 +81,34 @@ def del_from_hosts(domain, rm=True):
     return True
 
 
+def clear_all_hosts():
+    del_lines = ""
+    lines = ""
+    with open("/etc/hosts", "r") as fp:
+        while True:
+            l = fp.readline()
+            if HOSTS_TAG in l:
+                del_lines += l
+                continue
+            lines += l
+            if len(l) == 0:
+                break
+
+    with open("/etc/hosts", "w") as fp:
+        fp.write(lines)
+
+    print("cleared hosts line(s):")
+    print(del_lines)
+    return True
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--site", help="website domain, eg: www.deepin.com", default="www.deepin.com")
     parser.add_argument("--num", help="change number of the commit")
-    parser.add_argument("--action", choices=["add", "del"], default="add", help="add or del a website hosts item")
+    parser.add_argument("--action", choices=["add", "del", "clear"],
+            default="add", help="add/del/clear hosts item added by this tool")
     args = parser.parse_args()
 
     site = args.site
@@ -116,5 +138,12 @@ if __name__ == "__main__":
             quit(1)
 
         del_from_hosts(site)
+
+    elif action == "clear":
+        clear_all_hosts()
+
+    else:
+        print("Nothing has been done.")
+
 
 
