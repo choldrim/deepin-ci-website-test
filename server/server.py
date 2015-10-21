@@ -10,11 +10,11 @@ app = Flask(__name__)
 
 @app.route("/v1/hosts", methods=["GET"])
 def get_host():
-    rv_id = request.form.get("rv_id")
-    rv_id = rv_id.strip()
-    print("review id:", rv_id)
+    num = request.form.get("change_number")
+    num = num.strip()
+    print("review id:", num)
 
-    if not rv_id:
+    if not num:
         ret_data = {}
         ret_data["result"] = False
         ret_data["message"] = "params not correct"
@@ -26,20 +26,20 @@ def get_host():
         if len(_data.strip()):
             data = json.loads(_data)
 
-    ret_data = {"rv_id":"", "host":""}
-    ret_data["rv_id"] = rv_id
-    ret_data["host"] = data.get(rv_id, "")
+    ret_data = {"change_number":"", "host":""}
+    ret_data["change_number"] = num
+    ret_data["host"] = data.get(num, "")
     return json.dumps(ret_data)
 
 
 @app.route("/v1/hosts", methods=["POST"])
 def set_host():
-    rv_id = request.form.get("rv_id")
+    num = request.form.get("change_number")
     host = request.form.get("host")
 
     ret_data = {"result":False}
 
-    if not rv_id and not host:
+    if not num and not host:
         ret_data["message"] = "params not correct"
         return json.dumps(ret_data)
 
@@ -49,7 +49,7 @@ def set_host():
         if len(_data.strip()):
             data = json.loads(_data)
 
-        data[rv_id] = host
+        data[num] = host
 
     with open("hosts.json", "w") as fp:
         json.dump(data, fp)

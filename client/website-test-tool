@@ -8,24 +8,33 @@ import requests
 API_BASE = "http://10.0.1.62:8010/v1"
 HOSTS_TAG = "__d-web-tag__"
 
-def get_host(r_id):
+
+def get_change_num_detail(num):
     url = "%s/hosts" % API_BASE
     d = {
-        "rv_id": r_id
+        "change_number": num
         }
     rsp = requests.get(url, data=d)
-    host = rsp.json().get("host")
+    return rsp.json()
+
+def get_host(num):
+    detail = get_change_num_detail(num)
+    host = detail.get("host")
     print("host: ", host)
     return host
 
 
-def add_to_hosts(domain, host, r_id):
+def show_change_num_detail(num):
+    detail = get_change_num_detail(num)
+    print(detail)
+
+def add_to_hosts(domain, host, num):
     uid = os.getuid()
     if uid != 0:
         print("E: must be run as root!")
         return False
 
-    line = "%s %s # %s For cl %s, created by deepin-website-test-tool " %(host, domain, HOSTS_TAG, r_id)
+    line = "%s %s # %s For cl %s, created by deepin-website-test-tool " %(host, domain, HOSTS_TAG, num)
 
     content = ""
     with open("/etc/hosts", "r") as fp:
@@ -106,29 +115,38 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--site", help="website domain, eg: www.deepin.com", default="www.deepin.com")
-    parser.add_argument("--num", help="change number of the commit")
-    parser.add_argument("--action", choices=["add", "del", "clear"],
+    parser.add_argument("-n", "--number", help="change number of the commit")
+    parser.add_argument("-q", "--query", action="store_true", help="show detail of the given change number")
+    parser.add_argument("-a", "--action", choices=["add", "del", "clear"],
             default="add", help="add/del/clear hosts item added by this tool")
     args = parser.parse_args()
 
     site = args.site
-    r_id = args.num
+    num = args.number
     action = args.action
+    query = args.query
 
     project = "sites/" + site
 
-    if action == "add":
+    if query:
+        if not num:
+            print("-n or --number options is required")
+            quit(1)
+        #print("show detail of given num")
+        show_change_num_detail(num)
+
+    elif action == "add":
         if not site:
             print("--site options is required")
             quit(1)
 
-        if not r_id:
-            print("--id options is required")
+        if not num:
+            print("--number options is required")
             quit(1)
 
-        host = get_host(r_id)
+        host = get_host(num)
         if host:
-            add_to_hosts(site, host, r_id)
+            add_to_hosts(site, host, num)
         else:
             print("host not found in server")
 
