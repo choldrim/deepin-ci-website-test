@@ -19,13 +19,13 @@ def get_host(r_id):
     return host
 
 
-def add_to_hosts(domain, host):
+def add_to_hosts(domain, host, r_id):
     uid = os.getuid()
     if uid != 0:
         print("E: must be run as root!")
         return False
 
-    line = "%s %s # %s create by deepin-website-test-tool " %(host, domain, HOSTS_TAG)
+    line = "%s %s # %s For cl %s, created by deepin-website-test-tool " %(host, domain, HOSTS_TAG, r_id)
 
     content = ""
     with open("/etc/hosts", "r") as fp:
@@ -128,7 +128,7 @@ if __name__ == "__main__":
 
         host = get_host(r_id)
         if host:
-            add_to_hosts(site, host)
+            add_to_hosts(site, host, r_id)
         else:
             print("host not found in server")
 
