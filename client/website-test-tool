@@ -26,16 +26,33 @@ def add_to_hosts(domain, host):
         return False
 
     line = "%s %s # %s create by deepin-website-test-tool " %(host, domain, HOSTS_TAG)
-    with open("/etc/hosts", "r+") as fp:
+
+    content = ""
+    with open("/etc/hosts", "r") as fp:
         content = fp.read()
-        content += "\n%s" % line
-        fp.seek(0)
+
+    # handle
+    content = filter_repeat_domain(content, domain)
+    content += "\n%s" % line
+
+    with open("/etc/hosts", "w") as fp:
         fp.write(content)
 
     print("added hosts line:")
     print(" %s %s" %(host, domain))
 
     return True
+
+
+def filter_repeat_domain(content, domain):
+    lines = content.split("\n")
+    filter_lines = []
+    for line in lines:
+        if HOSTS_TAG in line and domain in line:
+            continue
+        filter_lines.append(line)
+
+    return "\n".join(filter_lines)
 
 
 def del_from_hosts(domain, rm=True):
@@ -67,7 +84,7 @@ def del_from_hosts(domain, rm=True):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--site", help="website domain, eg: www.deepin.com")
+    parser.add_argument("--site", help="website domain, eg: www.deepin.com", default="www.deepin.com")
     parser.add_argument("--num", help="change number of the commit")
     parser.add_argument("--action", choices=["add", "del"], default="add", help="add or del a website hosts item")
     args = parser.parse_args()

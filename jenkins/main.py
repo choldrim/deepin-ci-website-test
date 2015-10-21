@@ -9,7 +9,7 @@ import sys
 import requests
 
 SOURCE_BASE = "/data/deepin-website-services/website_source_code"
-API_BASE = "http://10.0.1.62:8010/v1"
+SERVER_API_BASE = "http://10.0.1.62:8010/v1"
 
 
 def check_cl(r_id, clean=True):
@@ -98,7 +98,7 @@ def upload_result(r_id, ip):
     print("all of the work is finished, upload review_id and ip to server")
     print(r_id, ip)
 
-    url = "%s/hosts" % API_BASE
+    url = "%s/hosts" % SERVER_API_BASE
     d = {
         "rv_id": r_id,
         "host": ip
