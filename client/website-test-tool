@@ -121,12 +121,13 @@ def clear_all_hosts():
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--domain", help="website domain, eg: www.deepin.com", default="www.deepin.com")
+    description = "a client tool for deepin-website-auto-test"
+    parser = argparse.ArgumentParser(description=description)
     parser.add_argument("-n", "--number", help="change number of the commit")
     parser.add_argument("-q", "--query", action="store_true", help="show detail of the given change number")
     parser.add_argument("-a", "--action", choices=["add", "del", "clear"],
-            default="add", help="add/del/clear hosts item added by this tool")
+            default="add", help="add/del/clear hosts item, default: add")
+    parser.add_argument("-d", "--domain", help="website domain, eg: www.deepin.com", default="www.deepin.com")
     args = parser.parse_args()
 
     domain = args.domain
@@ -137,15 +138,19 @@ if __name__ == "__main__":
     if query:
         if not num:
             print("-n or --number options is required")
+            parser.print_usage()
             quit(1)
         show_change_num_detail(num)
 
     elif action == "add":
         if not num:
             print("--number options is required")
+            parser.print_usage()
             quit(1)
 
-        host = get_host(num)
+        detail = get_change_num_detail(num)
+        domain = detail.get("domain", "")
+        host = detail.get("host", "")
         if host:
             add_to_hosts(domain, host, num)
         else:
@@ -154,6 +159,7 @@ if __name__ == "__main__":
     elif action == "del":
         if not domain:
             print("--domain options is required")
+            parser.print_usage()
             quit(1)
 
         del_from_hosts(domain)
