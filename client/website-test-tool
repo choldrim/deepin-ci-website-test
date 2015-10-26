@@ -31,7 +31,7 @@ def show_change_num_detail(num):
     host = detail.get("host", "")
     num = detail.get("change_number", "")
     print("domain: %s" % domain)
-    print("host: %s" % domain)
+    print("host: %s" % host)
     print("change number: %s" % num)
     return True
 
