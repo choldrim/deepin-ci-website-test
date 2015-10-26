@@ -9,7 +9,8 @@ import sys
 import requests
 
 SOURCE_BASE = "/data/deepin-website-services/website_source_code"
-SERVER_API_BASE = "http://10.0.1.62:8010/v1"
+#SERVER_API_BASE = "http://10.0.1.62:8010/v1"
+SERVER_API_BASE = "http://10.0.3.105:3500/v1"
 
 
 def check_cl(num, clean=True):
